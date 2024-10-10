@@ -1,5 +1,6 @@
 import streamlit as st
-from movie_api import get_movie_details, list_popular_movies, download_and_extract_tmdb_ids
+from movie_api import get_movie_details, list_popular_movies, download_and_extract_tmdb_ids, get_last_upload_info
+from datetime import datetime
 
 st.set_page_config(layout="wide")
 
@@ -33,6 +34,14 @@ if menu == "Rechercher un film":
             st.markdown(card_html, unsafe_allow_html=True)
 
 elif menu == "Télécharger les IDs de films":
+    last_upload_id, last_upload_date = get_last_upload_info()
+
+    if last_upload_date:
+        formatted_date = datetime.strptime(last_upload_date, "%d_%m_%Y").strftime("%d/%m/%Y")
+        st.markdown(f"### Dernier upload : {formatted_date}")
+    else:
+        st.markdown("### Aucun téléchargement antérieur trouvé.")
+
     if st.button("Télécharger et extraire les IDs des films d'hier"):
         download_and_extract_tmdb_ids()
 

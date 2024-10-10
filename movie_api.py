@@ -50,6 +50,13 @@ def download_and_extract_tmdb_ids():
     json_file = os.path.join(DATA_DIR, f"movie_ids_{yesterday}.json")  # Enregistrer dans le dossier data
 
     try:
+        for filename in os.listdir(DATA_DIR):
+            file_path = os.path.join(DATA_DIR, filename)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+
         st.info(f"Téléchargement du fichier : {gz_file}")
         response = requests.get(url, stream=True)
         response.raise_for_status()
@@ -87,7 +94,7 @@ def download_and_extract_tmdb_ids():
         df = pd.DataFrame(movies_details)
         insert_into_db(df)
 
-        st.success(f"Traitement terminé pour {max_movies_to_process} films.")
+        st.success(f"Traitement terminé pour {min(max_movies_to_process, len(movie_ids))} films.")
 
     except requests.exceptions.RequestException as e:
         st.error(f"Erreur lors du téléchargement : {e}")
@@ -105,3 +112,16 @@ def list_popular_movies():
     else:
         st.error(f"Erreur : Statut {response.status_code} lors de la requête.")
         return []
+
+def get_last_upload_info():
+    """Récupère les informations du dernier fichier JSON dans le dossier DATA_DIR."""
+    files = os.listdir(DATA_DIR)
+    json_files = [f for f in files if f.endswith('.json')]
+    if json_files:
+        latest_file = max(json_files, key=lambda f: os.path.getmtime(os.path.join(DATA_DIR, f)))
+        # Extraire l'ID et la date du nom de fichier
+        parts = latest_file.split('_')
+        id_str = parts[1]
+        date_str = '_'.join(parts[2:]).replace('.json', '')
+        return id_str, date_str
+    return None, None
